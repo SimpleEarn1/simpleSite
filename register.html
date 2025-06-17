@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Регистрация пользователя</title>
+</head>
+<body>
+  <h1>Регистрация</h1>
+  <form id="registerForm">
+    <label>Имя пользователя:<br />
+      <input type="text" id="username" name="username" required />
+    </label><br /><br />
+    <label>Пароль:<br />
+      <input type="password" id="password" name="password" required />
+    </label><br /><br />
+    <button type="submit">Зарегистрироваться</button>
+  </form>
+
+  <p id="result"></p>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const result = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); // отменяем отправку формы
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          result.style.color = 'green';
+          result.textContent = data.message || 'Регистрация прошла успешно!';
+        } else {
+          result.style.color = 'red';
+          result.textContent = data.message || 'Ошибка при регистрации';
+        }
+      } catch (error) {
+        result.style.color = 'red';
+        result.textContent = 'Ошибка сети или сервера';
+      }
+    });
+  </script>
+</body>
+</html>
