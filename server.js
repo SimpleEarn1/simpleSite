@@ -22,6 +22,9 @@ app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/balance', balanceRoutes);
+app.get('/', (req, res) => {
+  res.send('✅ Сервер работает! Добро пожаловать на SimpleEarn 👋');
+});
 
 // Подключение к MongoDB
 const MONGODB_URI = process.env.MONGODB_URI;
