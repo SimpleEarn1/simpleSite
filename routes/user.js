@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/auth');
+const { authMiddleware } = require('../middleware/auth');
 const User = require('../models/User');
 
 // GET /api/user/profile — получить профиль текущего пользователя
@@ -12,7 +12,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
     }
 
     res.json({
-      name: user.name || user.email,
+      name: user.name,  // исправлено
       email: user.email,
       balance: user.balance,
       transactions: user.transactions || [],

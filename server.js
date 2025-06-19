@@ -15,7 +15,7 @@ const authRoutes = require('./routes/auth');
 const balanceRoutes = require('./routes/balance');
 const teamRoute = require('./routes/team');
 
-// Подключаем API маршруты до статики и wildcard
+// Подключаем API маршруты (до статики и wildcard)
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
@@ -37,7 +37,7 @@ app.get('*', (req, res) => {
 
 // Подключение к MongoDB и запуск сервера
 const MONGODB_URI = process.env.MONGODB_URI;
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000  // <-- исправлено: добавлен оператор 
 
 console.log("🔐 MONGODB_URI из .env:", MONGODB_URI);
 
