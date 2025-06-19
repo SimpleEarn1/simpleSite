@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// 🔐 Middleware: проверка JWT-токена
+// 🔐 Middleware: проверка JWT и загрузка пользователя
 async function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
 
@@ -13,27 +13,25 @@ async function authMiddleware(req, res, next) {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // секрет из .env
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Находим пользователя по decoded.id (или decoded.userId — зависит, как генерируешь токен)
-    const user = await User.findById(decoded.id); 
-
+    const user = await User.findById(decoded.userId); // ключ 'userId' должен быть в токене
     if (!user) {
       return res.status(401).json({ message: 'Пользователь не найден' });
     }
 
-    req.user = user; // сохраняем пользователя в req.user для дальнейших middleware и роутов
+    req.user = user;      // сохраняем объект пользователя
+    req.userId = user.id; // удобно для краткой ссылки
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Неверный токен' });
   }
 }
 
-// 🔒 Middleware: доступ только для администратора
+// 🔒 Middleware: доступ только для админа
 function adminOnly(req, res, next) {
-  // Исправлено условие — если нет req.user ИЛИ роль не admin
   if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Доступ запрещён (только для админа)' });
+    return res.status(403).json({ message: 'Доступ запрещён (только для администратора)' });
   }
   next();
 }

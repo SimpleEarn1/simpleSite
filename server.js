@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
-require('dotenv').config();  // Загружаем .env в первую очередь
+const path = require('path');
+require('dotenv').config();  // Загружаем переменные окружения
 
 const app = express();
 
@@ -14,24 +15,33 @@ const authRoutes = require('./routes/auth');
 const balanceRoutes = require('./routes/balance');
 const teamRoute = require('./routes/team');
 
-// Подключаем маршруты
-app.use('/api/team', teamRoute);
-console.log('userRoutes:', userRoutes);
-// Подключаем маршруты
+// Подключаем API маршруты до статики и wildcard
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/balance', balanceRoutes);
-app.get('/', (req, res) => {
+app.use('/api/team', teamRoute);
+
+// Тестовый API маршрут
+app.get('/api', (req, res) => {
   res.send('✅ Сервер работает! Добро пожаловать на SimpleEarn 👋');
 });
 
-// Подключение к MongoDB
+// Обслуживание статических файлов React из client/build
+app.use(express.static(path.join(__dirname, 'client', 'build')));
+
+// Отдаём React для всех остальных маршрутов (кроме /api/*)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
+});
+
+// Подключение к MongoDB и запуск сервера
 const MONGODB_URI = process.env.MONGODB_URI;
+const PORT = process.env.PORT || 5000;
+
 console.log("🔐 MONGODB_URI из .env:", MONGODB_URI);
 
-
-mongoose.connect(MONGODB_URI, {// Подключение к MongoDB
+mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })

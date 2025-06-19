@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Регистрация</title>
+</head>
+<body>
+  <h1>Регистрация</h1>
+  <form id="registerForm">
+    <input name="email" placeholder="Email" required />
+    <input name="password" type="password" placeholder="Пароль" required />
+    <button type="submit">Зарегистрироваться</button>
+  </form>
+
+  <p id="message"></p>
+
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = e.target.email.value;
+      const password = e.target.password.value;
+
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+      document.getElementById('message').innerText = data.message || JSON.stringify(data);
+    });
+  </script>
+</body>
+</html>
