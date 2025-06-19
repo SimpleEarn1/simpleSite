@@ -1,9 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
+require('dotenv').config();  // Загружаем .env в первую очередь
 
-
-require('dotenv').config();
-const app = express();// Загружаем .env в первую очередь
+const app = express();
 
 // Middleware для обработки JSON
 app.use(express.json());
@@ -14,6 +13,8 @@ const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
 const balanceRoutes = require('./routes/balance');
 const teamRoute = require('./routes/team');
+
+// Подключаем маршруты
 app.use('/api/team', teamRoute);
 console.log('userRoutes:', userRoutes);
 // Подключаем маршруты
@@ -26,7 +27,8 @@ app.use('/api/balance', balanceRoutes);
 const MONGODB_URI = process.env.MONGODB_URI;
 console.log("🔐 MONGODB_URI из .env:", MONGODB_URI);
 
-mongoose.connect(MONGODB_URI, {
+
+mongoose.connect(MONGODB_URI, {// Подключение к MongoDB
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
