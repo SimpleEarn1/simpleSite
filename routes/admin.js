@@ -1,11 +1,34 @@
 const express = require('express');
 const router = express.Router();
-
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const { authMiddleware, adminOnly } = require('../middleware/auth');
 
-// Получить всех пользователей (без пароля)
+// 🔐 Вход в админ-панель
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  const admin = await User.findOne({ email });
+
+  if (!admin || (!admin.isAdmin && admin.role !== 'admin')) {
+    return res.status(401).json({ message: 'Нет доступа' });
+  }
+
+  if (admin.password !== password) {
+    return res.status(401).json({ message: 'Неверный пароль' });
+  }
+
+  const token = jwt.sign(
+    { id: admin._id, isAdmin: true, role: admin.role },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+
+  res.json({ token });
+});
+
+// 📋 Получить всех пользователей (без пароля)
 router.get('/users', authMiddleware, adminOnly, async (req, res) => {
   try {
     const users = await User.find({}, '-password');
@@ -16,7 +39,7 @@ router.get('/users', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
-// Изменить баланс пользователя
+// 💵 Изменить баланс
 router.post('/users/:id/balance', authMiddleware, adminOnly, async (req, res) => {
   try {
     const { amount } = req.body;
@@ -33,7 +56,7 @@ router.post('/users/:id/balance', authMiddleware, adminOnly, async (req, res) =>
   }
 });
 
-// Удалить пользователя
+// ❌ Удалить пользователя
 router.delete('/users/:id', authMiddleware, adminOnly, async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
@@ -44,7 +67,7 @@ router.delete('/users/:id', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
-// Заблокировать / разблокировать пользователя
+// ⛔️ Блокировка / разблокировка
 router.post('/users/:id/block', authMiddleware, adminOnly, async (req, res) => {
   try {
     const { block } = req.body;
@@ -61,7 +84,7 @@ router.post('/users/:id/block', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
-// История операций пользователя
+// 📜 История операций
 router.get('/users/:id/history', authMiddleware, adminOnly, async (req, res) => {
   try {
     const userId = req.params.id;
@@ -74,3 +97,37 @@ router.get('/users/:id/history', authMiddleware, adminOnly, async (req, res) => 
 });
 
 module.exports = router;
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+
+// 🛡️ Обычная проверка токена (для всех пользователей)
+const authMiddleware = async (req, res, next) => {
+  const authHeader = req.header('Authorization');
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Нет токена. Доступ запрещён' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = await User.findById(decoded.id).select('-password');
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: 'Недопустимый токен' });
+  }
+};
+
+// 🔐 Проверка, что пользователь — админ
+const adminOnly = (req, res, next) => {
+  if (req.user?.isAdmin || req.user?.role === 'admin') {
+    return next();
+  }
+  return res.status(403).json({ message: 'Только для администраторов' });
+};
+
+module.exports = {
+  authMiddleware,
+  adminOnly
+};

@@ -1,18 +1,34 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User').default;
+const User = require('../models/User');
 
+// 🛡️ Обычная проверка токена (для всех пользователей)
 const authMiddleware = async (req, res, next) => {
-  const token = req.header('Authorization');
+  const authHeader = req.header('Authorization');
 
-  if (!token) return res.status(401).json({ message: 'Нет токена. Доступ запрещён' });
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Нет токена. Доступ запрещён' });
+  }
+
+  const token = authHeader.split(' ')[1];
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await User.findById(decoded.id).select('-password');
     next();
   } catch (err) {
-    res.status(401).json({ message: 'Недопустимый токен' });
+    return res.status(401).json({ message: 'Недопустимый токен' });
   }
 };
 
-module.exports = authMiddleware;
+// 🔐 Проверка, что пользователь — админ
+const adminOnly = (req, res, next) => {
+  if (req.user?.isAdmin || req.user?.role === 'admin') {
+    return next();
+  }
+  return res.status(403).json({ message: 'Только для администраторов' });
+};
+
+module.exports = {
+  authMiddleware,
+  adminOnly
+};
