@@ -1,88 +1,81 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const Transaction = require('../models/Transaction');
-const { authMiddleware, adminOnly } = require('../middleware/auth');  // Импортируем middleware
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
-// Вход для админа
+// POST /api/auth/register — регистрация пользователя
+router.post('/register', async (req, res) => {
+  try {
+    const { email, password, referrerCode } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Поля email и password обязательны' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Пароль должен быть минимум 6 символов' });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Пользователь с таким email уже существует' });
+    }
+
+    let referrer = null;
+    if (referrerCode) {
+      referrer = await User.findOne({
+        $or: [
+          { _id: referrerCode },
+          { email: referrerCode }
+        ]
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({
+      email,
+      password: hashedPassword,
+      referrerId: referrer ? referrer._id : null
+    });
+
+    await newUser.save();
+
+    res.status(201).json({ message: 'Пользователь зарегистрирован' });
+  } catch (error) {
+    console.error('Ошибка регистрации:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
+
+// POST /api/auth/login — вход пользователя
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-
-  const admin = await User.findOne({ email });
-  if (!admin || admin.role !== 'admin') {
-    return res.status(401).json({ message: 'Нет доступа' });
-  }
-  if (admin.password !== password) {
-    return res.status(401).json({ message: 'Неверный пароль' });
-  }
-
-  const token = require('jsonwebtoken').sign(
-    { id: admin._id, role: admin.role },
-    process.env.JWT_SECRET,
-    { expiresIn: '7d' }
-  );
-
-  res.json({ token });
-});
-
-// Получить всех пользователей (без паролей)
-router.get('/users', authMiddleware, adminOnly, async (req, res) => {
   try {
-    const users = await User.find({}, '-password');
-    res.json(users);
-  } catch {
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
+    const { email, password } = req.body;
 
-// Изменить баланс пользователя
-router.post('/users/:id/balance', authMiddleware, adminOnly, async (req, res) => {
-  try {
-    const { amount } = req.body;
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: 'Пользователь не найден' });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Поля email и password обязательны' });
+    }
 
-    user.balance = amount;
-    await user.save();
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'Неверный email или пароль' });
+    }
 
-    res.json({ message: 'Баланс обновлён', balance: user.balance });
-  } catch {
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Неверный email или пароль' });
+    }
 
-// Удалить пользователя
-router.delete('/users/:id', authMiddleware, adminOnly, async (req, res) => {
-  try {
-    await User.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Пользователь удалён' });
-  } catch {
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
-// Блокировка/разблокировка пользователя
-router.post('/users/:id/block', authMiddleware, adminOnly, async (req, res) => {
-  try {
-    const { block } = req.body; // true или false
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: 'Пользователь не найден' });
-
-    user.isBlocked = !!block;
-    await user.save();
-
-    res.json({ message: block ? 'Пользователь заблокирован' : 'Пользователь разблокирован' });
-  } catch {
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
-
-// История операций пользователя
-router.get('/users/:id/history', authMiddleware, adminOnly, async (req, res) => {
-  try {
-    const history = await Transaction.find({ userId: req.params.id }).sort({ date: -1 });
-    res.json(history);
-  } catch {
+    res.json({ token, message: 'Успешный вход' });
+  } catch (error) {
+    console.error('Ошибка входа:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 });
