@@ -2,21 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function Login() {
-  // Состояния для email, пароля и ошибок
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  // Навигация для редиректа после входа
   const navigate = useNavigate();
 
-  // Обработчик формы входа
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // Отправляем POST запрос на backend
-      const res = await fetch('/api/admin/login', { // замени на твой API путь
+      const res = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -27,18 +23,17 @@ function Login() {
       const data = await res.json();
 
       if (!res.ok) {
-        // Если ошибка, показываем сообщение
         setError(data.message || 'Ошибка входа');
         return;
       }
 
-      // Успешный вход: сохраняем токен в localStorage
       localStorage.setItem('token', data.token);
 
-      // Редиректим пользователя на защищённую страницу (например, профиль)
-      navigate('/profile');
-    } catch (err) {
-      setError('Ошибка сервера');
+      // ✅ Переход на главную страницу после входа
+      navigate('/');
+    } catch (error) {
+      console.error('Ошибка сети:', error);
+      setError('Ошибка сети');
     }
   };
 
