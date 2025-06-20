@@ -1,3 +1,7 @@
+router.post('/login', async (req, res) => {
+  console.log('Получен /login, тело запроса:', req.body);
+  // ... остальной код
+});
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');

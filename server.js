@@ -3,11 +3,14 @@ const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config();  // Загружаем переменные окружения
 
+const express = require('express');
 const app = express();
 
-// Middleware для обработки JSON
+// Должно быть вот так, очень ВАЖНО:
 app.use(express.json());
 
+// Далее подключение роутов:
+app.use('/api/auth', authRoutes);
 // Импорт маршрутов
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
