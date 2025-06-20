@@ -3,43 +3,55 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Home from './pages/Home';
+import Profile from './pages/Profile';
+import History from './pages/History';
+import Referrals from './pages/Referrals';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Проверяем, есть ли токен при загрузке приложения
+  // Проверка токена при загрузке
   useEffect(() => {
     const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token); // если токен есть — true, иначе false
+    setIsLoggedIn(!!token); // true если токен есть
   }, []);
 
-  // Обработчик выхода
   const handleLogout = () => {
-    localStorage.removeItem('token'); // удаляем токен
-    setIsLoggedIn(false); // обновляем состояние
-    window.location.href = '/login'; // перенаправляем пользователя на вход
+    localStorage.removeItem('token');
+    setIsLoggedIn(false);
+    window.location.href = '/login';
   };
 
   return (
     <Router>
-      <nav style={{ marginBottom: '20px' }}>
-        <Link to="/">Главная</Link> |{' '}
-        <Link to="/register">Регистрация</Link> |{' '}
-        <Link to="/login">Вход</Link>
+      <div>
+        <nav style={{ marginBottom: '20px' }}>
+          {isLoggedIn ? (
+            <>
+              <Link to="/home">🏠 Главная</Link> |{' '}
+              <Link to="/profile">👤 Профиль</Link> |{' '}
+              <Link to="/history">📜 История</Link> |{' '}
+              <Link to="/referrals">👥 Рефералы</Link> |{' '}
+              <button onClick={handleLogout}>🚪 Выйти</button>
+            </>
+          ) : (
+            <>
+              <Link to="/login">Вход</Link> |{' '}
+              <Link to="/register">Регистрация</Link>
+            </>
+          )}
+        </nav>
 
-        {/* Если пользователь залогинен — показываем кнопку "Выйти" */}
-        {isLoggedIn && (
-          <>
-            {' '}| <button onClick={handleLogout}>Выйти</button>
-          </>
-        )}
-      </nav>
-
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
+        <Routes>
+          <Route path="/" element={<Register />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/referrals" element={<Referrals />} />
+        </Routes>
+      </div>
     </Router>
   );
 }
