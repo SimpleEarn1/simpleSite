@@ -2,13 +2,14 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
     const { email, password, referrerCode } = req.body;
 
-    // 1. Проверка полей
+    // Проверка обязательных полей
     if (!email || !password) {
       return res.status(400).json({ message: 'Поля email и password обязательны' });
     }
@@ -16,13 +17,13 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Пароль должен быть минимум 6 символов' });
     }
 
-    // 2. Проверка, существует ли такой пользователь
+    // Проверяем, есть ли уже пользователь с таким email
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'Пользователь с таким email уже существует' });
     }
 
-    // 3. Поиск пригласившего по referrerCode (можно использовать _id или email)
+    // Ищем пригласившего пользователя по referrerCode
     let referrer = null;
     if (referrerCode) {
       referrer = await User.findOne({
@@ -33,10 +34,10 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // 4. Хешируем пароль
+    // Хешируем пароль
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 5. Создаем пользователя
+    // Создаем нового пользователя
     const newUser = new User({
       email,
       password: hashedPassword,
@@ -57,22 +58,24 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Проверка обязательных полей
     if (!email || !password) {
       return res.status(400).json({ message: 'Поля email и password обязательны' });
     }
 
+    // Ищем пользователя в базе
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'Неверный email или пароль' });
     }
 
+    // Сравниваем пароли
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Неверный email или пароль' });
     }
 
-    // Здесь нужно создать JWT токен, например:
-    const jwt = require('jsonwebtoken');
+    // Создаем JWT токен
     const token = jwt.sign(
       { userId: user._id, email: user.email },
       process.env.JWT_SECRET,
