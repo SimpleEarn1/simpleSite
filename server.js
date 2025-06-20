@@ -40,6 +40,7 @@ const MONGODB_URI = process.env.MONGODB_URI;
 const PORT = process.env.PORT || 5000;
 
 console.log("🔐 MONGODB_URI из .env:", MONGODB_URI);
+console.log("JWT_SECRET =", process.env.JWT_SECRET);
 
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
