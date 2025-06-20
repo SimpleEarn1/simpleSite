@@ -15,7 +15,7 @@ const authRoutes = require('./routes/auth');
 const balanceRoutes = require('./routes/balance');
 const teamRoute = require('./routes/team');
 
-// Подключаем API маршруты (до статики и wildcard)
+// Подключаем API маршруты
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
@@ -27,17 +27,17 @@ app.get('/api', (req, res) => {
   res.send('✅ Сервер работает! Добро пожаловать на SimpleEarn 👋');
 });
 
-// Обслуживание статических файлов React из client/build
+// Обслуживание статики React
 app.use(express.static(path.join(__dirname, 'client', 'build')));
 
-// Отдаём React для всех остальных маршрутов (кроме /api/*)
+// Отдача React-приложения на все остальные маршруты
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
 });
 
 // Подключение к MongoDB и запуск сервера
 const MONGODB_URI = process.env.MONGODB_URI;
-const PORT = process.env.PORT || 5000  // <-- исправлено: добавлен оператор 
+const PORT = process.env.PORT || 5000;
 
 console.log("🔐 MONGODB_URI из .env:", MONGODB_URI);
 
@@ -47,9 +47,6 @@ mongoose.connect(MONGODB_URI, {
 })
 .then(() => {
   console.log("✅ MongoDB подключена");
-
-  // Запуск сервера после успешного подключения к БД
-  const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
     console.log(`🚀 Сервер запущен на порту ${PORT}`);
   });

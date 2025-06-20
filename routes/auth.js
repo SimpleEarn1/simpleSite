@@ -25,7 +25,6 @@ router.post('/register', async (req, res) => {
     // 3. Поиск пригласившего по referrerCode (можно использовать _id или email)
     let referrer = null;
     if (referrerCode) {
-      // попробуем найти по ID или email
       referrer = await User.findOne({
         $or: [
           { _id: referrerCode },
@@ -49,6 +48,40 @@ router.post('/register', async (req, res) => {
     res.status(201).json({ message: 'Пользователь зарегистрирован' });
   } catch (error) {
     console.error('Ошибка регистрации:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
+
+// POST /api/auth/login
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Поля email и password обязательны' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'Неверный email или пароль' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Неверный email или пароль' });
+    }
+
+    // Здесь нужно создать JWT токен, например:
+    const jwt = require('jsonwebtoken');
+    const token = jwt.sign(
+      { userId: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({ token, message: 'Успешный вход' });
+  } catch (error) {
+    console.error('Ошибка входа:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 });
