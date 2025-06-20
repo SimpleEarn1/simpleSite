@@ -28,11 +28,11 @@ function App() {
         <nav style={{ marginBottom: '20px' }}>
           {isLoggedIn ? (
             <>
-              <Link to="/home">🏠 Главная</Link> |{' '}
-              <Link to="/profile">👤 Профиль</Link> |{' '}
-              <Link to="/history">📜 История</Link> |{' '}
-              <Link to="/referrals">👥 Рефералы</Link> |{' '}
-              <button onClick={handleLogout}>🚪 Выйти</button>
+              <Link to="/home"> Главная</Link> |{' '}
+              <Link to="/profile"> Профиль</Link> |{' '}
+              <Link to="/history"> История</Link> |{' '}
+              <Link to="/referrals"> Рефералы</Link> |{' '}
+              <button onClick={handleLogout}> Выйти</button>
             </>
           ) : (
             <>
