@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Home from './pages/Home';
@@ -13,7 +13,7 @@ function App() {
   // Проверка токена при загрузке
   useEffect(() => {
     const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token); // true если токен есть
+    setIsLoggedIn(!!token);
   }, []);
 
   const handleLogout = () => {
@@ -22,17 +22,22 @@ function App() {
     window.location.href = '/login';
   };
 
+  // Приватный маршрут
+  const PrivateRoute = ({ element }) => {
+    return isLoggedIn ? element : <Navigate to="/login" />;
+  };
+
   return (
     <Router>
       <div>
         <nav style={{ marginBottom: '20px' }}>
           {isLoggedIn ? (
             <>
-              <Link to="/home"> Главная</Link> |{' '}
-              <Link to="/profile"> Профиль</Link> |{' '}
-              <Link to="/history"> История</Link> |{' '}
-              <Link to="/referrals"> Рефералы</Link> |{' '}
-              <button onClick={handleLogout}> Выйти</button>
+              <Link to="/home">Главная</Link> |{' '}
+              <Link to="/profile">Профиль</Link> |{' '}
+              <Link to="/history">История</Link> |{' '}
+              <Link to="/referrals">Рефералы</Link> |{' '}
+              <button onClick={handleLogout}>Выйти</button>
             </>
           ) : (
             <>
@@ -43,13 +48,18 @@ function App() {
         </nav>
 
         <Routes>
-          <Route path="/" element={<Register />} />
+          {/* Публичные маршруты */}
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/history" element={<History />} />
-          <Route path="/referrals" element={<Referrals />} />
+
+          {/* Главная страница по умолчанию */}
+          <Route path="/" element={<PrivateRoute element={<Home />} />} />
+
+          {/* Приватные маршруты */}
+          <Route path="/home" element={<PrivateRoute element={<Home />} />} />
+          <Route path="/profile" element={<PrivateRoute element={<Profile />} />} />
+          <Route path="/history" element={<PrivateRoute element={<History />} />} />
+          <Route path="/referrals" element={<PrivateRoute element={<Referrals />} />} />
         </Routes>
       </div>
     </Router>

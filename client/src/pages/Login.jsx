@@ -29,8 +29,8 @@ function Login() {
 
       localStorage.setItem('token', data.token);
 
-      // ✅ Переход на главную страницу после входа
-      navigate('/');
+      // ✅ Переход на страницу /home после успешного входа
+      navigate('/home');
     } catch (error) {
       console.error('Ошибка сети:', error);
       setError('Ошибка сети');
