@@ -12,13 +12,13 @@ async function authMiddleware(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(decoded.userId || decoded.id); // уточни, что хранится в токене
     if (!user) return res.status(401).json({ message: 'Пользователь не найден' });
 
     req.user = user;
     req.userId = user.id;
     next();
-  } catch {
+  } catch (error) {
     return res.status(401).json({ message: 'Неверный токен' });
   }
 }
