@@ -14,6 +14,11 @@ const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
 const balanceRoutes = require('./routes/balance');
 const teamRoute = require('./routes/team');
+const cors = require('cors');
+app.use(cors({
+  origin: 'https://simpleearn-1.onrender.com', // или '*', но лучше указывать точно
+  credentials: true
+}));
 
 // Подключаем API маршруты
 app.use('/api/user', userRoutes);
